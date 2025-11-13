@@ -1,0 +1,87 @@
+@prefix : <http://www.semanticweb.org/firesystem#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+:Building a owl:Class ;
+    rdfs:label "Здание" .
+
+:Sensor a owl:Class ;
+    rdfs:label "Датчик" .
+
+:SmokeSensor a owl:Class ;
+    rdfs:subClassOf :Sensor ;
+    rdfs:label "Датчик дыма" .
+
+:TemperatureSensor a owl:Class ;
+    rdfs:subClassOf :Sensor ;
+    rdfs:label "Датчик температуры" .
+
+:ZoneSensor a owl:Class ;
+    rdfs:subClassOf :Sensor ;
+    rdfs:label "Датчик зоны" .
+
+:Actuator a owl:Class ;
+    rdfs:label "Исполнительное устройство" .
+
+:Sprinkler a owl:Class ;
+    rdfs:subClassOf :Actuator ;
+    rdfs:label "Спринклер" .
+
+:Alarm a owl:Class ;
+    rdfs:subClassOf :Actuator ;
+    rdfs:label "Сигнализация" .
+
+:EvacuationSystem a owl:Class ;
+    rdfs:subClassOf :Actuator ;
+    rdfs:label "Система эвакуации" .
+
+:hasSensor a owl:ObjectProperty ;
+    rdfs:domain :Building ;
+    rdfs:range :Sensor ;
+    rdfs:label "имеет датчик" .
+
+:hasActuator a owl:ObjectProperty ;
+    rdfs:domain :Building ;
+    rdfs:range :Actuator ;
+    rdfs:label "имеет исполнительное устройство" .
+
+:hasValue a owl:DatatypeProperty ;
+    rdfs:domain :Sensor ;
+    rdfs:range xsd:float ;
+    rdfs:label "имеет значение" .
+
+:locatedIn a owl:ObjectProperty ;
+    rdfs:domain :Sensor ;
+    rdfs:range :Zone ;
+    rdfs:label "расположен в зоне" .
+
+:Zone a owl:Class ;
+    rdfs:label "Зона" .
+
+# Экземпляры
+:building1 a :Building ;
+    :hasSensor :smokeSensor1, :tempSensor1, :zoneSensor1 ;
+    :hasActuator :sprinkler1, :alarm1, :evacSystem1 .
+
+:smokeSensor1 a :SmokeSensor ;
+    :hasValue 0.0 ;
+    :locatedIn :zone1 .
+
+:tempSensor1 a :TemperatureSensor ;
+    :hasValue 25.0 ;
+    :locatedIn :zone1 .
+
+:zoneSensor1 a :ZoneSensor ;
+    :hasValue 1.0 .
+
+:sprinkler1 a :Sprinkler .
+
+:alarm1 a :Alarm .
+
+:evacSystem1 a :EvacuationSystem .
+
+:zone1 a :Zone ;
+    rdfs:label "Основная зона" .

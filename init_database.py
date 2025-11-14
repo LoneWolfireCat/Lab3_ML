@@ -23,7 +23,7 @@ def init_database():
         condition_zone TEXT,
         action_sprinkler TEXT,
         action_alarm TEXT,
-        action_evacuation TEXT,
+        action_ventilation TEXT,
         priority INTEGER
     )
     ''')
@@ -56,27 +56,32 @@ def init_database():
     cursor.executemany('INSERT INTO fuzzy_sets VALUES (NULL, ?, ?, ?, ?, ?, ?)',
                        smoke_sets + temp_sets + zone_sets)
 
-    # ДОПОЛНИТЕЛЬНЫЕ ПРАВИЛА ДЛЯ ТЕМПЕРАТУРЫ В ДИАПАЗОНЕ hot
+    # ОБНОВЛЕННЫЕ ПРАВИЛА С СИСТЕМОЙ ВЕНТИЛЯЦИИ
     rules = [
-        # smoke, temp, zone, sprinkler, alarm, evacuation, priority
-        ('high', None, None, 'high', 'on', 'immediate', 10),
-        (None, 'critical', None, 'high', 'on', 'immediate', 10),
-        ('medium', 'hot', None, 'medium', 'on', 'prepare', 9),
-        ('medium', None, 'danger', 'medium', 'on', 'prepare', 9),
-        ('low', 'warm', 'risk', 'low', 'on', 'none', 8),
-        ('low', None, 'risk', 'low', 'warning', 'none', 7),
-        (None, 'warm', 'risk', 'low', 'warning', 'none', 7),
+        # smoke, temp, zone, sprinkler, alarm, ventilation, priority
+        ('high', None, None, 'high', 'on', 'high', 10),
+        (None, 'critical', None, 'high', 'on', 'high', 10),
+        ('medium', 'hot', None, 'medium', 'on', 'medium', 9),
+        ('medium', None, 'danger', 'medium', 'on', 'medium', 9),
+        ('low', 'warm', 'risk', 'low', 'on', 'low', 8),
+        ('low', None, 'risk', 'low', 'warning', 'low', 7),
+        (None, 'warm', 'risk', 'low', 'warning', 'low', 7),
 
-        # НОВЫЕ ПРАВИЛА ДЛЯ ТЕМПЕРАТУРЫ hot:
-        (None, 'hot', 'danger', 'medium', 'on', 'prepare', 8),
-        (None, 'hot', 'risk', 'low', 'on', 'none', 7),
-        (None, 'hot', None, 'low', 'warning', 'none', 6),
+        # ПРАВИЛА ДЛЯ ВЕНТИЛЯЦИИ ПРИ ВЫСОКОМ УРОВНЕ ДЫМА
+        ('high', 'normal', None, 'off', 'on', 'high', 9),
+        ('high', 'warm', None, 'low', 'on', 'high', 9),
+        ('medium', None, None, 'off', 'warning', 'medium', 6),
 
-        ('none', 'normal', 'safe', 'off', 'off', 'none', 5),
-        (None, None, 'safe', 'off', 'off', 'none', 4),
+        # ПРАВИЛА ДЛЯ ТЕМПЕРАТУРЫ hot:
+        (None, 'hot', 'danger', 'medium', 'on', 'medium', 8),
+        (None, 'hot', 'risk', 'low', 'on', 'low', 7),
+        (None, 'hot', None, 'low', 'warning', 'low', 6),
 
-        # ДОПОЛНИТЕЛЬНОЕ ПРАВИЛО ДЛЯ ОСТАТОЧНОЙ ТЕМПЕРАТУРЫ:
-        ('none', 'warm', None, 'off', 'warning', 'none', 5),
+        ('none', 'normal', 'safe', 'off', 'off', 'off', 5),
+        (None, None, 'safe', 'off', 'off', 'off', 4),
+
+        # ПРАВИЛО ДЛЯ ОСТАТОЧНОЙ ТЕМПЕРАТУРЫ:
+        ('none', 'warm', None, 'off', 'warning', 'low', 5),
     ]
 
     cursor.executemany('''
@@ -85,7 +90,4 @@ def init_database():
 
     conn.commit()
     conn.close()
-    print("База данных системы пожаротушения инициализирована!")
-
-if __name__ == "__main__":
-    init_database()
+    print("База данных системы пожаротушения с вентиляцией инициализирована!")

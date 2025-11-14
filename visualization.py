@@ -9,13 +9,13 @@ class SimulationVisualizer:
         self.zones = []
         self.sprinklers = []
         self.alarms = []
-        self.evacuations = []
+        self.ventilations = []
 
         plt.ion()
         self.fig, ((ax1, ax2, ax3), (ax4, ax5, ax6)) = plt.subplots(2, 3, figsize=(15, 8))
-        self.fig.suptitle('СИСТЕМА ПОЖАРОТУШЕНИЯ ЗДАНИЯ', fontsize=14, fontweight='bold')
+        self.fig.suptitle('СИСТЕМА ПОЖАРОТУШЕНИЯ С ВЕНТИЛЯЦИЕЙ', fontsize=14, fontweight='bold')
 
-    def update(self, step, smoke, temperature, zone, sprinkler, alarm, evacuation):
+    def update(self, step, smoke, temperature, zone, sprinkler, alarm, ventilation):
         """Обновление данных для графика"""
         self.steps.append(step)
         self.smoke_levels.append(smoke)
@@ -23,7 +23,7 @@ class SimulationVisualizer:
         self.zones.append(zone)
         self.sprinklers.append(sprinkler)
         self.alarms.append(alarm)
-        self.evacuations.append(evacuation)
+        self.ventilations.append(ventilation)
 
         self._plot_all()
 
@@ -78,11 +78,11 @@ class SimulationVisualizer:
         ax5.set_ylim(-0.1, 1.1)
         ax5.grid(True, alpha=0.3)
 
-        # График эвакуации
+        # График вентиляции
         ax6 = self.fig.axes[5]
-        ax6.plot(self.steps, self.evacuations, color='green', marker='o', linestyle='-', linewidth=2, markersize=4)
-        ax6.set_title('УРОВЕНЬ ЭВАКУАЦИИ')
-        ax6.set_ylabel('Уровень (0-1)')
+        ax6.plot(self.steps, self.ventilations, color='green', marker='o', linestyle='-', linewidth=2, markersize=4)
+        ax6.set_title('СИСТЕМА ВЕНТИЛЯЦИИ')
+        ax6.set_ylabel('Интенсивность (0-1)')
         ax6.set_xlabel('Шаг симуляции')
         ax6.set_ylim(-0.1, 1.1)
         ax6.grid(True, alpha=0.3)

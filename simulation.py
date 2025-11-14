@@ -62,7 +62,7 @@ class FireSuppressionSimulator:
         self.safe_steps_count = 0
 
         print("\n" + "=" * 60)
-        print("🚒 СИМУЛЯТОР СИСТЕМЫ ПОЖАРОТУШЕНИЯ ЗАПУЩЕН!")
+        print("🚒 СИМУЛЯТОР СИСТЕМЫ ПОЖАРОТУШЕНИЯ С ВЕНТИЛЯЦИЕЙ ЗАПУЩЕН!")
         print(f"📊 НАЧАЛЬНЫЕ УСЛОВИЯ: Дым={self.smoke}%, Температура={self.temperature}°C, Зона={self.zone}")
 
         if is_safe_zone(self.smoke, self.temperature, self.zone):
@@ -77,28 +77,35 @@ class FireSuppressionSimulator:
         self.external_smoke = max(0, min(100, self.external_smoke + np.random.normal(0, 2)))
         self.external_temp = max(0, min(200, self.external_temp + np.random.normal(0, 1)))
 
-    def apply_control_actions(self, sprinkler: float, alarm: float, evacuation: float):
-        """Улучшенная физическая модель с естественным охлаждением"""
+    def apply_control_actions(self, sprinkler: float, alarm: float, ventilation: float):
+        """Улучшенная физическая модель с системой вентиляции"""
 
-        # БАЗОВОЕ ВОЗДЕЙСТВИЕ СПРИНКЛЕРА (усиленное)
-        smoke_reduction = sprinkler * 30  # увеличено с 25
-        temp_reduction = sprinkler * 40  # увеличено с 35
+        # БАЗОВОЕ ВОЗДЕЙСТВИЕ СПРИНКЛЕРА
+        smoke_reduction = sprinkler * 30
+        temp_reduction = sprinkler * 40
+
+        # ВОЗДЕЙСТВИЕ ВЕНТИЛЯЦИИ НА ДЫМ
+        ventilation_smoke_reduction = ventilation * 25  # вентиляция эффективно удаляет дым
+        ventilation_temp_reduction = ventilation * 10   # вентиляция слабо влияет на температуру
 
         # ЭКСПОНЕНЦИАЛЬНОЕ ОХЛАЖДЕНИЕ при высоких температурах
         if self.temperature > 80:
             extra_cooling = (self.temperature - 80) * 0.4 * sprinkler
             temp_reduction += extra_cooling
 
-        # ЕСТЕСТВЕННОЕ ОХЛАЖДЕНИЕ (даже без спринклера)
+        # ЕСТЕСТВЕННОЕ ОХЛАЖДЕНИЕ
         natural_cooling = max(0, (self.external_temp - self.temperature) * 0.15)
         temp_reduction += natural_cooling
 
         # ОБНОВЛЕНИЕ СОСТОЯНИЯ
-        self.smoke = max(0, min(100, self.smoke - smoke_reduction + self.external_smoke * 0.05))
-        self.temperature = max(0, min(200, self.temperature - temp_reduction + self.external_temp * 0.02))
+        total_smoke_reduction = smoke_reduction + ventilation_smoke_reduction
+        total_temp_reduction = temp_reduction + ventilation_temp_reduction
 
-        # БОЛЕЕ БЫСТРОЕ СНИЖЕНИЕ УРОВНЯ РИСКА ЗОНЫ
-        if sprinkler > 0.5 or self.temperature > 60:
+        self.smoke = max(0, min(100, self.smoke - total_smoke_reduction + self.external_smoke * 0.05))
+        self.temperature = max(0, min(200, self.temperature - total_temp_reduction + self.external_temp * 0.02))
+
+        # СНИЖЕНИЕ УРОВНЯ РИСКА ЗОНЫ
+        if sprinkler > 0.5 or ventilation > 0.7 or self.temperature > 60:
             risk_increase = 0.02
         else:
             risk_increase = -0.15  # быстрое снижение риска
@@ -140,12 +147,12 @@ class FireSuppressionSimulator:
             actions = self.fis.infer(self.smoke, self.temperature, self.zone)
             sprinkler = actions['sprinkler']
             alarm = actions['alarm']
-            evacuation = actions['evacuation']
+            ventilation = actions['ventilation']
 
-            print(f"🎛 УПРАВЛЕНИЕ: спринклер={sprinkler:.2f}, сигнализация={alarm:.2f}, эвакуация={evacuation:.2f}")
+            print(f"🎛 УПРАВЛЕНИЕ: спринклер={sprinkler:.2f}, сигнализация={alarm:.2f}, вентиляция={ventilation:.2f}")
 
-            self.visualizer.update(step, self.smoke, self.temperature, self.zone, sprinkler, alarm, evacuation)
-            self.apply_control_actions(sprinkler, alarm, evacuation)
+            self.visualizer.update(step, self.smoke, self.temperature, self.zone, sprinkler, alarm, ventilation)
+            self.apply_control_actions(sprinkler, alarm, ventilation)
 
         # Статистика
         print("\n" + "=" * 60)

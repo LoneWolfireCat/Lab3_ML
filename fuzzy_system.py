@@ -7,7 +7,7 @@ class FuzzyInferenceSystem:
         self.db_path = db_path
         self.sprinkler_map = {'off': 0, 'low': 0.33, 'medium': 0.66, 'high': 1.0}
         self.alarm_map = {'off': 0, 'warning': 0.5, 'on': 1.0}
-        self.evacuation_map = {'none': 0, 'prepare': 0.5, 'immediate': 1.0}
+        self.ventilation_map = {'off': 0, 'low': 0.33, 'medium': 0.66, 'high': 1.0}
 
     def trapezoid_mf(self, x: float, a: float, b: float, c: float, d: float) -> float:
         """Трапециевидная функция принадлежности"""
@@ -46,7 +46,7 @@ class FuzzyInferenceSystem:
         return result
 
     def infer(self, smoke: float, temperature: float, zone: float) -> Dict[str, float]:
-        """Нечеткий вывод для системы пожаротушения"""
+        """Нечеткий вывод для системы пожаротушения с вентиляцией"""
         # Фаззификация
         smoke_fuzzy = self.fuzzify(smoke, 'smoke')
         temp_fuzzy = self.fuzzify(temperature, 'temperature')
@@ -67,13 +67,13 @@ class FuzzyInferenceSystem:
         # Агрегация и активация правил
         sprinkler_output = {}
         alarm_output = {}
-        evacuation_output = {}
+        ventilation_output = {}
 
         print("\n📋 ПРОВЕРКА ПРАВИЛ:")
 
         for rule in rules:
             (rule_id, cond_smoke, cond_temp, cond_zone,
-             act_sprinkler, act_alarm, act_evacuation, priority) = rule
+             act_sprinkler, act_alarm, act_ventilation, priority) = rule
 
             # Вычисляем степень истинности условия
             truth_level = 1.0
@@ -112,24 +112,24 @@ class FuzzyInferenceSystem:
                     current_value = alarm_output.get(act_alarm, 0)
                     alarm_output[act_alarm] = max(current_value, truth_level)
 
-                if act_evacuation:
-                    current_value = evacuation_output.get(act_evacuation, 0)
-                    evacuation_output[act_evacuation] = max(current_value, truth_level)
+                if act_ventilation:
+                    current_value = ventilation_output.get(act_ventilation, 0)
+                    ventilation_output[act_ventilation] = max(current_value, truth_level)
 
         print(f"\n🎛 АКТИВИРОВАННЫЕ ДЕЙСТВИЯ:")
         print(f"   Спринклер: {sprinkler_output}")
         print(f"   Сигнализация: {alarm_output}")
-        print(f"   Эвакуация: {evacuation_output}")
+        print(f"   Вентиляция: {ventilation_output}")
 
         # Дефаззификация
         sprinkler_result = self.defuzzify_sprinkler(sprinkler_output)
         alarm_result = self.defuzzify_alarm(alarm_output)
-        evacuation_result = self.defuzzify_evacuation(evacuation_output)
+        ventilation_result = self.defuzzify_ventilation(ventilation_output)
 
         return {
             'sprinkler': sprinkler_result,
             'alarm': alarm_result,
-            'evacuation': evacuation_result
+            'ventilation': ventilation_result
         }
 
     def defuzzify_sprinkler(self, fuzzy_output: Dict[str, float]) -> float:
@@ -171,10 +171,10 @@ class FuzzyInferenceSystem:
         print(f"   Сигнализация: {fuzzy_output} → {status} ({result:.2f})")
         return result
 
-    def defuzzify_evacuation(self, fuzzy_output: Dict[str, float]) -> float:
-        """Дефаззификация для эвакуации"""
+    def defuzzify_ventilation(self, fuzzy_output: Dict[str, float]) -> float:
+        """Дефаззификация для вентиляции"""
         if not fuzzy_output:
-            print("   Эвакуация: нет активированных правил → НЕТ")
+            print("   Вентиляция: нет активированных правил → ВЫКЛ")
             return 0.0
 
         numerator = 0.0
@@ -182,11 +182,11 @@ class FuzzyInferenceSystem:
 
         for term, membership in fuzzy_output.items():
             membership_val = float(membership)
-            crisp_value = self.evacuation_map[term]
+            crisp_value = self.ventilation_map[term]
             numerator += crisp_value * membership_val
             denominator += membership_val
 
         result = numerator / denominator if denominator != 0 else 0.0
-        status = "НЕТ" if result < 0.25 else "ПОДГОТОВКА" if result < 0.75 else "НЕМЕДЛЕННО"
-        print(f"   Эвакуация: {fuzzy_output} → {status} ({result:.2f})")
+        status = "ВЫКЛ" if result < 0.25 else "НИЗКАЯ" if result < 0.5 else "СРЕДНЯЯ" if result < 0.75 else "ВЫСОКАЯ"
+        print(f"   Вентиляция: {fuzzy_output} → {status} ({result:.2f})")
         return result

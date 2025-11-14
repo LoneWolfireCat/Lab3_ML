@@ -34,9 +34,9 @@
     rdfs:subClassOf :Actuator ;
     rdfs:label "Сигнализация" .
 
-:EvacuationSystem a owl:Class ;
+:VentilationSystem a owl:Class ;
     rdfs:subClassOf :Actuator ;
-    rdfs:label "Система эвакуации" .
+    rdfs:label "Система вентиляции" .
 
 :hasSensor a owl:ObjectProperty ;
     rdfs:domain :Building ;
@@ -64,7 +64,7 @@
 # Экземпляры
 :building1 a :Building ;
     :hasSensor :smokeSensor1, :tempSensor1, :zoneSensor1 ;
-    :hasActuator :sprinkler1, :alarm1, :evacSystem1 .
+    :hasActuator :sprinkler1, :alarm1, :ventilationSystem1 .
 
 :smokeSensor1 a :SmokeSensor ;
     :hasValue 0.0 ;
@@ -81,7 +81,7 @@
 
 :alarm1 a :Alarm .
 
-:evacSystem1 a :EvacuationSystem .
+:ventilationSystem1 a :VentilationSystem .
 
 :zone1 a :Zone ;
     rdfs:label "Основная зона" .

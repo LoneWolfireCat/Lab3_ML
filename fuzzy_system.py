@@ -2,11 +2,13 @@ import sqlite3
 import numpy as np
 from typing import Dict, List, Tuple
 
+
 class FuzzyInferenceSystem:
     def __init__(self, db_path: str):
         self.db_path = db_path
         self.sprinkler_map = {'off': 0, 'low': 0.33, 'medium': 0.66, 'high': 1.0}
         self.alarm_map = {'off': 0, 'warning': 0.5, 'on': 1.0}
+        # Убедитесь, что используются только эти термины для вентиляции
         self.ventilation_map = {'off': 0, 'low': 0.33, 'medium': 0.66, 'high': 1.0}
 
     def trapezoid_mf(self, x: float, a: float, b: float, c: float, d: float) -> float:
@@ -113,6 +115,10 @@ class FuzzyInferenceSystem:
                     alarm_output[act_alarm] = max(current_value, truth_level)
 
                 if act_ventilation:
+                    # Проверяем, что термин вентиляции корректен
+                    if act_ventilation not in self.ventilation_map:
+                        print(f"   ⚠️  ПРЕДУПРЕЖДЕНИЕ: неизвестный термин вентиляции '{act_ventilation}'")
+                        continue
                     current_value = ventilation_output.get(act_ventilation, 0)
                     ventilation_output[act_ventilation] = max(current_value, truth_level)
 
@@ -181,12 +187,21 @@ class FuzzyInferenceSystem:
         denominator = 0.0
 
         for term, membership in fuzzy_output.items():
+            # Проверяем корректность термина
+            if term not in self.ventilation_map:
+                print(f"   ⚠️  ОШИБКА: неизвестный термин вентиляции '{term}'")
+                continue
+
             membership_val = float(membership)
             crisp_value = self.ventilation_map[term]
             numerator += crisp_value * membership_val
             denominator += membership_val
 
-        result = numerator / denominator if denominator != 0 else 0.0
+        if denominator == 0:
+            print("   Вентиляция: все термины некорректны → ВЫКЛ")
+            return 0.0
+
+        result = numerator / denominator
         status = "ВЫКЛ" if result < 0.25 else "НИЗКАЯ" if result < 0.5 else "СРЕДНЯЯ" if result < 0.75 else "ВЫСОКАЯ"
         print(f"   Вентиляция: {fuzzy_output} → {status} ({result:.2f})")
         return result

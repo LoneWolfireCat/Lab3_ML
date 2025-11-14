@@ -56,7 +56,7 @@ def init_database():
     cursor.executemany('INSERT INTO fuzzy_sets VALUES (NULL, ?, ?, ?, ?, ?, ?)',
                        smoke_sets + temp_sets + zone_sets)
 
-    # ОБНОВЛЕННЫЕ ПРАВИЛА С СИСТЕМОЙ ВЕНТИЛЯЦИИ
+    # ОБНОВЛЕННЫЕ ПРАВИЛА С КОРРЕКТНЫМИ ТЕРМИНАМИ ВЕНТИЛЯЦИИ
     rules = [
         # smoke, temp, zone, sprinkler, alarm, ventilation, priority
         ('high', None, None, 'high', 'on', 'high', 10),
@@ -91,3 +91,6 @@ def init_database():
     conn.commit()
     conn.close()
     print("База данных системы пожаротушения с вентиляцией инициализирована!")
+
+if __name__ == "__main__":
+    init_database()
